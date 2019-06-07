@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="true">m2m.fcam.vn</domain>
+        <trust-anchors>
+            <certificates src="@raw/icp_ssl"/>
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Paho-MQTT-Android-TCP-TLS-WSS-Example.iml" filepath="$PROJECT_DIR$/Paho-MQTT-Android-TCP-TLS-WSS-Example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MQTT-Paho.iml" filepath="$PROJECT_DIR$/MQTT-Paho.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

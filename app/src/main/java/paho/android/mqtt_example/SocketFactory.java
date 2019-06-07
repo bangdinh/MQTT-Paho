@@ -2,6 +2,8 @@ package paho.android.mqtt_example;
 
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -11,6 +13,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
@@ -87,65 +90,33 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory {
             KeyManagementException, java.security.cert.CertificateException, UnrecoverableKeyException {
         Log.v(this.toString(), "initializing CustomSocketFactory");
 
-        tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        KeyManagerFactory kmf = KeyManagerFactory.getInstance("X509");
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+// From https://www.washington.edu/itconnect/security/ca/load-der.crt
+
+        Log.e("INPUT",options.caCrtInputStream.available()+"");
+        InputStream caInput = new BufferedInputStream(options.caCrtInputStream);
+        Certificate ca = cf.generateCertificate(caInput);
 
 
-        if (options.hasCaCrt()) {
-            Log.v(this.toString(), "MQTT_CONNECTION_OPTIONS.hasCaCrt(): true");
+// Create a KeyStore containing our trusted CAs
+        String keyStoreType = KeyStore.getDefaultType();
+        KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+        keyStore.load(null, null);
+        keyStore.setCertificateEntry("ca", ca);
 
-            KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            caKeyStore.load(null, null);
+// Create a TrustManager that trusts the CAs in our KeyStore
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+        tmf.init(keyStore);
 
-            CertificateFactory caCF = CertificateFactory.getInstance("X.509");
-            X509Certificate ca = (X509Certificate) caCF.generateCertificate(options.getCaCrtInputStream());
-            String alias = ca.getSubjectX500Principal().getName();
-            // Set propper alias name
-            caKeyStore.setCertificateEntry(alias, ca);
-            tmf.init(caKeyStore);
-
-            Log.i("Certificate Owner: %s", ca.getSubjectDN().toString());
-            Log.i("Certificate Issuer: %s", ca.getIssuerDN().toString());
-            Log.i("", "Certificate Serial Number:" + ca.getSerialNumber().toString());
-            Log.i("", "Certificate Algorithm: " + ca.getSigAlgName());
-            Log.i("Certificate Version: %s", ca.getVersion() + "");
-            Log.i("Certificate OID: %s", ca.getSigAlgOID());
-            Enumeration<String> aliasesCA = caKeyStore.aliases();
-            for (; aliasesCA.hasMoreElements(); ) {
-                String o = aliasesCA.nextElement();
-                Log.v("", "Alias: %s isKeyEntry:%s isCertificateEntry:%s" + o + caKeyStore.isKeyEntry(o) + caKeyStore.isCertificateEntry(o));
-            }
-
-
-        } else {
-            Log.v("CA sideload: false", " using system keystore");
-            KeyStore keyStore = KeyStore.getInstance("AndroidCAStore");
-            keyStore.load(null);
-            tmf.init(keyStore);
-        }
-
-        if (options.hasClientP12Crt()) {
-            Log.v(this.toString(), "MQTT_CONNECTION_OPTIONS.hasClientP12Crt(): true");
-
-            KeyStore clientKeyStore = KeyStore.getInstance("PKCS12");
-
-            clientKeyStore.load(options.getCaClientP12InputStream(), options.hasClientP12Password() ? options.getCaClientP12Password().toCharArray() : new char[0]);
-            kmf.init(clientKeyStore, options.hasClientP12Password() ? options.getCaClientP12Password().toCharArray() : new char[0]);
-
-            Log.v(this.toString(), "Client .p12 Keystore content: ");
-            Enumeration<String> aliasesClientCert = clientKeyStore.aliases();
-            for (; aliasesClientCert.hasMoreElements(); ) {
-                String o = aliasesClientCert.nextElement();
-                Log.v("Alias: %s", o);
-            }
-        } else {
-            Log.v(this.toString(), "Client .p12 sideload: false, using null CLIENT cert");
-            kmf.init(null, null);
-        }
+// Create an SSLContext that uses our TrustManager
 
         // Create an SSLContext that uses our TrustManager
-        SSLContext context = SSLContext.getInstance("tlsv1.2");//TLSv1.2
-        context.init(kmf.getKeyManagers(), getTrustManagers(), null);
+        SSLContext context = SSLContext.getInstance("TLSv1.2");//TLSv1.2,tlsv1
+//        SSLContext context = SSLContext.getInstance("TLS");
+        context.init(null, tmf.getTrustManagers(), null);
+
+//        context.init(kmf.getKeyManagers(), getTrustManagers(), null);
         this.factory = context.getSocketFactory();
 
     }

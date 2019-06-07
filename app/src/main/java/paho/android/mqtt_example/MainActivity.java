@@ -46,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     //pblic static final String BROKER = "tcp://test.mosquitto.org:1883";
 //    public static final String BROKER = "ws://broker.hivemq.com:8000";
 
-    public String BROKER = "tcp://m2m.fcam.vn:1883";
+//    public String BROKER = "tcp://m2m.fcam.vn:1883";
+    public String BROKER = "ssl://m2m.fcam.vn:8883";
     //# Means subscribe to everything
     public static final String TOPIC = "ipc/fptbang";
 
@@ -62,12 +63,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_connect, tv_topic, tv_subscribe, tv_message;
 
     private void changeLinkSsl(boolean isChange) {
-        if (isChange) {
-            BROKER = "ssl://test.mosquitto.org:8883";
-
-        } else {
-            BROKER = "tcp://m2m.fcam.vn:1883";
-        }
+//        if (isChange) {
+//            BROKER = "ssl://m2m.fcam.vn:8883";
+//
+//        } else {
+//            BROKER = "tcp://m2m.fcam.vn:1883";
+//        }
     }
 
     @Override
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
         /**
          * Depending on your MQTT broker, you might want to set these
          */
-        MQTT_CONNECTION_OPTIONS.setCleanSession(true);
+
         MQTT_CONNECTION_OPTIONS.setUserName(USERNAME);
         MQTT_CONNECTION_OPTIONS.setPassword(PASSWORD.toCharArray());
 
@@ -131,13 +132,9 @@ public class MainActivity extends AppCompatActivity {
          */
         if (BROKER.contains("ssl")) {
             SocketFactory.SocketFactoryOptions socketFactoryOptions = new SocketFactory.SocketFactoryOptions();
-            try {
-                socketFactoryOptions.withCaInputStream(context.getResources().openRawResource(paho.android.mqtt_example.R.raw.icp_ssl));
-                MQTT_CONNECTION_OPTIONS.setSocketFactory(new SocketFactory(socketFactoryOptions));
-            } catch (IOException | NoSuchAlgorithmException | KeyStoreException | CertificateException | KeyManagementException | UnrecoverableKeyException e) {
-                Log.e("Mqtt", e.toString());
-                e.printStackTrace();
-            }
+            socketFactoryOptions.withCaInputStream(context.getResources().openRawResource(R.raw.icp_ssl));
+            MQTT_CONNECTION_OPTIONS.setSocketFactory(SslUtility.newInstance(this).getSocketFactory(R.raw.icp_ssl,""));
+            MQTT_CONNECTION_OPTIONS.setCleanSession(true);
         }
     }
 
