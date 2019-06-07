@@ -2,8 +2,14 @@ package paho.android.mqtt_example;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -38,24 +44,49 @@ public class MainActivity extends AppCompatActivity {
 
     //public static final String BROKER = "ssl://test.mosquitto.org:8883";
     //pblic static final String BROKER = "tcp://test.mosquitto.org:1883";
-    public static final String BROKER = "ws://broker.hivemq.com:8000";
+//    public static final String BROKER = "ws://broker.hivemq.com:8000";
 
+    public String BROKER = "tcp://m2m.fcam.vn:1883";
     //# Means subscribe to everything
-    public static final String TOPIC = "#";
+    public static final String TOPIC = "ipc/fptbang";
 
     //Optional
-    public static final String USERNAME = "YOUR_USERNAME";
-    public static final String PASSWORD = "YOUR_PASSWORD";
+    public static final String USERNAME = "ipcfpt1";
+    public static final String PASSWORD = "Z42y13L!OnYwo*Z24eGY";
+    public static final String CLIENT_ID = "ipc-" + MqttClient.generateClientId();
 
 
     public MqttAndroidClient CLIENT;
     public MqttConnectOptions MQTT_CONNECTION_OPTIONS;
+
+    private TextView tv_connect, tv_topic, tv_subscribe, tv_message;
+
+    private void changeLinkSsl(boolean isChange) {
+        if (isChange) {
+            BROKER = "ssl://test.mosquitto.org:8883";
+
+        } else {
+            BROKER = "tcp://m2m.fcam.vn:1883";
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(paho.android.mqtt_example.R.layout.activity_main);
 
+        tv_connect = findViewById(R.id.tv_connect);
+        tv_topic = findViewById(R.id.tv_topic);
+        tv_subscribe = findViewById(R.id.tv_subscribe);
+        tv_message = findViewById(R.id.tv_message);
+        SwitchMaterial btn_switch = findViewById(R.id.btn_switch);
+
+        btn_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                changeLinkSsl(isChecked);
+            }
+        });
 
         MqttSetup(this);
         MqttConnect();
@@ -70,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 Log.d("topic:" + topic, "message:" + message.toString());
+                tv_message.setText(message.toString());
             }
 
             @Override
@@ -81,17 +113,16 @@ public class MainActivity extends AppCompatActivity {
 
     void MqttSetup(Context context) {
 
-
-        CLIENT = new MqttAndroidClient(getBaseContext(), BROKER, MqttClient.generateClientId());
+        CLIENT = new MqttAndroidClient(getBaseContext(), BROKER, CLIENT_ID);
         MQTT_CONNECTION_OPTIONS = new MqttConnectOptions();
 
 
         /**
          * Depending on your MQTT broker, you might want to set these
          */
-
-        //MQTT_CONNECTION_OPTIONS.setUserName(USERNAME);
-        //MQTT_CONNECTION_OPTIONS.setPassword(PASSWORD.toCharArray());
+        MQTT_CONNECTION_OPTIONS.setCleanSession(true);
+        MQTT_CONNECTION_OPTIONS.setUserName(USERNAME);
+        MQTT_CONNECTION_OPTIONS.setPassword(PASSWORD.toCharArray());
 
 
         /**
@@ -101,9 +132,10 @@ public class MainActivity extends AppCompatActivity {
         if (BROKER.contains("ssl")) {
             SocketFactory.SocketFactoryOptions socketFactoryOptions = new SocketFactory.SocketFactoryOptions();
             try {
-                socketFactoryOptions.withCaInputStream(context.getResources().openRawResource(paho.android.mqtt_example.R.raw.mosquitto_org));
+                socketFactoryOptions.withCaInputStream(context.getResources().openRawResource(paho.android.mqtt_example.R.raw.icp_ssl));
                 MQTT_CONNECTION_OPTIONS.setSocketFactory(new SocketFactory(socketFactoryOptions));
             } catch (IOException | NoSuchAlgorithmException | KeyStoreException | CertificateException | KeyManagementException | UnrecoverableKeyException e) {
+                Log.e("Mqtt", e.toString());
                 e.printStackTrace();
             }
         }
@@ -118,13 +150,15 @@ public class MainActivity extends AppCompatActivity {
                 public void onSuccess(IMqttToken asyncActionToken) {
                     // We are connected
                     Log.d("mqtt:", "connected, token:" + asyncActionToken.toString());
+                    tv_connect.setText("Connected");
                     subscribe(TOPIC, (byte) 1);
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                     // Something went wrong e.g. connection timeout or firewall problems
-                    Log.d("mqtt:", "not connected" + asyncActionToken.toString());
+                    Log.d("mqtt:", "not connected" + asyncActionToken.toString() + exception.toString());
+                    tv_connect.setText("Not Connected");
                 }
             });
         } catch (MqttException e) {
@@ -133,19 +167,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void subscribe(String topic, byte qos) {
-
+        tv_topic.setText("Topic: " + topic);
         try {
             IMqttToken subToken = CLIENT.subscribe(topic, qos);
             subToken.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     Log.d("mqtt:", "subscribed" + asyncActionToken.toString());
+                    tv_subscribe.setText("Subscribe : success");
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken,
                                       Throwable exception) {
-
+                    tv_subscribe.setText("Subscribe : failed");
                     Log.d("mqtt:", "subscribing error");
                 }
             });
@@ -222,5 +257,23 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+    }
+
+    public void onClick(View view) {
+        int idView = view.getId();
+        switch (idView) {
+            case R.id.btn_connect:
+                break;
+            case R.id.btn_subscribe:
+                break;
+            case R.id.btn_publish:
+                String message = "{'name','Đây là message publish'}";
+                publish(TOPIC, message);
+                break;
+            case R.id.btn_unsubscribe:
+                break;
+            case R.id.btn_disconnect:
+                break;
+        }
     }
 }

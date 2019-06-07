@@ -22,13 +22,11 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.security.cert.CertificateException;
 
-import timber.log.Timber;
-
 /**
  * Original SocketFactory file taken from https://github.com/owntracks/android
  */
 
-public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
+public class SocketFactory extends javax.net.ssl.SSLSocketFactory {
     private javax.net.ssl.SSLSocketFactory factory;
 
     public static class SocketFactoryOptions {
@@ -41,10 +39,12 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
             this.caCrtInputStream = stream;
             return this;
         }
+
         public SocketFactoryOptions withClientP12InputStream(InputStream stream) {
             this.caClientP12InputStream = stream;
             return this;
         }
+
         public SocketFactoryOptions withClientP12Password(String password) {
             this.caClientP12Password = password;
             return this;
@@ -74,6 +74,7 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
             return (caClientP12Password != null) && !caClientP12Password.equals("");
         }
     }
+
     public SocketFactory() throws CertificateException, KeyStoreException, NoSuchAlgorithmException, IOException, KeyManagementException, java.security.cert.CertificateException, UnrecoverableKeyException {
         this(new SocketFactoryOptions());
     }
@@ -81,14 +82,16 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
 
     private TrustManagerFactory tmf;
 
-    public SocketFactory(SocketFactoryOptions options) throws KeyStoreException, NoSuchAlgorithmException, IOException, KeyManagementException, java.security.cert.CertificateException, UnrecoverableKeyException {
+    public SocketFactory(SocketFactoryOptions options)
+            throws KeyStoreException, NoSuchAlgorithmException, IOException,
+            KeyManagementException, java.security.cert.CertificateException, UnrecoverableKeyException {
         Log.v(this.toString(), "initializing CustomSocketFactory");
 
         tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         KeyManagerFactory kmf = KeyManagerFactory.getInstance("X509");
 
 
-        if(options.hasCaCrt()) {
+        if (options.hasCaCrt()) {
             Log.v(this.toString(), "MQTT_CONNECTION_OPTIONS.hasCaCrt(): true");
 
             KeyStore caKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -101,22 +104,21 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
             caKeyStore.setCertificateEntry(alias, ca);
             tmf.init(caKeyStore);
 
-            Timber.v("Certificate Owner: %s", ca.getSubjectDN().toString());
-            Timber.v("Certificate Issuer: %s", ca.getIssuerDN().toString());
-            Timber.v("Certificate Serial Number: %s", ca.getSerialNumber().toString());
-            Timber.v("Certificate Algorithm: %s", ca.getSigAlgName());
-            Timber.v("Certificate Version: %s", ca.getVersion());
-            Timber.v("Certificate OID: %s", ca.getSigAlgOID());
+            Log.i("Certificate Owner: %s", ca.getSubjectDN().toString());
+            Log.i("Certificate Issuer: %s", ca.getIssuerDN().toString());
+            Log.i("", "Certificate Serial Number:" + ca.getSerialNumber().toString());
+            Log.i("", "Certificate Algorithm: " + ca.getSigAlgName());
+            Log.i("Certificate Version: %s", ca.getVersion() + "");
+            Log.i("Certificate OID: %s", ca.getSigAlgOID());
             Enumeration<String> aliasesCA = caKeyStore.aliases();
             for (; aliasesCA.hasMoreElements(); ) {
                 String o = aliasesCA.nextElement();
-                Timber.v("Alias: %s isKeyEntry:%s isCertificateEntry:%s", o, caKeyStore.isKeyEntry(o), caKeyStore.isCertificateEntry(o));
+                Log.v("", "Alias: %s isKeyEntry:%s isCertificateEntry:%s" + o + caKeyStore.isKeyEntry(o) + caKeyStore.isCertificateEntry(o));
             }
 
 
-
         } else {
-            Timber.v("CA sideload: false, using system keystore");
+            Log.v("CA sideload: false", " using system keystore");
             KeyStore keyStore = KeyStore.getInstance("AndroidCAStore");
             keyStore.load(null);
             tmf.init(keyStore);
@@ -134,17 +136,17 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
             Enumeration<String> aliasesClientCert = clientKeyStore.aliases();
             for (; aliasesClientCert.hasMoreElements(); ) {
                 String o = aliasesClientCert.nextElement();
-                Timber.v("Alias: %s", o);
+                Log.v("Alias: %s", o);
             }
         } else {
             Log.v(this.toString(), "Client .p12 sideload: false, using null CLIENT cert");
-            kmf.init(null,null);
+            kmf.init(null, null);
         }
 
         // Create an SSLContext that uses our TrustManager
-        SSLContext context = SSLContext.getInstance("TLSv1.2");
+        SSLContext context = SSLContext.getInstance("tlsv1.2");//TLSv1.2
         context.init(kmf.getKeyManagers(), getTrustManagers(), null);
-        this.factory= context.getSocketFactory();
+        this.factory = context.getSocketFactory();
 
     }
 
@@ -164,44 +166,44 @@ public class SocketFactory extends javax.net.ssl.SSLSocketFactory{
 
     @Override
     public Socket createSocket() throws IOException {
-        SSLSocket r = (SSLSocket)this.factory.createSocket();
-        r.setEnabledProtocols(new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket();
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 
     @Override
     public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-        SSLSocket r = (SSLSocket)this.factory.createSocket(s, host, port, autoClose);
-        r.setEnabledProtocols(new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket(s, host, port, autoClose);
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 
     @Override
     public Socket createSocket(String host, int port) throws IOException {
 
-        SSLSocket r = (SSLSocket)this.factory.createSocket(host, port);
-        r.setEnabledProtocols(new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket(host, port);
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 
     @Override
     public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
-        SSLSocket r = (SSLSocket)this.factory.createSocket(host, port, localHost, localPort);
-        r.setEnabledProtocols(new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket(host, port, localHost, localPort);
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 
     @Override
     public Socket createSocket(InetAddress host, int port) throws IOException {
-        SSLSocket r = (SSLSocket)this.factory.createSocket(host, port);
-        r.setEnabledProtocols(new String[]{ "TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket(host, port);
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 
     @Override
     public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
-        SSLSocket r = (SSLSocket)this.factory.createSocket(address, port, localAddress,localPort);
-        r.setEnabledProtocols(new String[] {"TLSv1", "TLSv1.1", "TLSv1.2"});
+        SSLSocket r = (SSLSocket) this.factory.createSocket(address, port, localAddress, localPort);
+        r.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
         return r;
     }
 }
