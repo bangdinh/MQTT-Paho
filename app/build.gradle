@@ -1,11 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
+    buildToolsVersion = '29.0.0 rc3'
+
+
     defaultConfig {
         applicationId "com.eurbon.pahomqttclientexample"
-        minSdkVersion 16
-        targetSdkVersion 28
+        minSdkVersion 19
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -16,6 +19,29 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions("version")
+    productFlavors{
+        demo{
+            dimension "version"
+            applicationIdSuffix ".demo"
+//            applicationId = "com.eurbon.pahomqttclientexample.demo"
+            resValue("string","app_name","Demo App")
+            buildConfigField("String","HOST","\"http:demoapp.com\"")
+        }
+        full{
+            dimension "version"
+            applicationIdSuffix ".full"
+//            applicationId = "com.eurbon.pahomqttclientexample.full"
+            resValue("string","app_name","Full App")
+            buildConfigField("String","HOST","\"http:fullapp.com\"")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
 }
 
 dependencies {
@@ -26,9 +52,11 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     testImplementation 'junit:junit:4.12'
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
     implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'com.google.android.material:material:1.1.0-alpha07'
+    implementation project(':mqttutils')
 
 }

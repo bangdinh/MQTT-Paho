@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bang.mqttutils.MqttUtils;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -34,6 +35,10 @@ import java.security.cert.CertificateException;
  * How to use:
  * Just uncomment desired BROKER and launch the application, then check logs for MQTT data
  */
+
+/**
+ * */
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -75,12 +80,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(paho.android.mqtt_example.R.layout.activity_main);
+        String link = BuildConfig.HOST;
+        Log.e("Link: ",link);
+        String idApp = BuildConfig.APPLICATION_ID;
+        Log.e("idApp",idApp);
 
         tv_connect = findViewById(R.id.tv_connect);
         tv_topic = findViewById(R.id.tv_topic);
         tv_subscribe = findViewById(R.id.tv_subscribe);
         tv_message = findViewById(R.id.tv_message);
         SwitchMaterial btn_switch = findViewById(R.id.btn_switch);
+
 
         btn_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
