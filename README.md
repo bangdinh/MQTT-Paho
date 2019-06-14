@@ -1,10 +1,6 @@
 # PahoMQTTClientExample
 
-{using git}
 
-git remote -v 
-git remote add <name>[ ]<link git> : day len
-git push --mirror <name>
 
 -------------
 
@@ -13,6 +9,14 @@ Paho MQTT wrapper for Android. Connects to MQTT broker via TCP, WSS,TLS(by using
 How to use:
 
 Just uncomment desired BROKER in MainActivity and launch the application, then check logs for MQTT data
+
+
+{using git}
+
+1.git remote -v 
+2.git remote add <name>[ ]<link git> : day len
+3.git push --mirror <name>
+
 
 Link:
 {Build Variants}
