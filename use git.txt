@@ -1,0 +1,3 @@
+git remote -v 
+git remote add <name>[ ]<link git> : day len
+git push --mirror <name>

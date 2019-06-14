@@ -18,6 +18,7 @@ Just uncomment desired BROKER in MainActivity and launch the application, then c
 3.git push --mirror <name>
 
 
+
 Link:
 {Build Variants}
 1. https://github.com/manijshrestha/BuildVariantDemo/blob/master/app/src/main/java/com/manijshrestha/buildvariantdemo/model/WeatherData.java
