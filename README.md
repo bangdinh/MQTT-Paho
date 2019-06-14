@@ -1,4 +1,13 @@
 # PahoMQTTClientExample
+
+{using git}
+
+git remote -v 
+git remote add <name>[ ]<link git> : day len
+git push --mirror <name>
+
+-------------
+
 Paho MQTT wrapper for Android. Connects to MQTT broker via TCP, WSS,TLS(by using certificate file stored in resources)
 
 How to use:
